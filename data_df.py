@@ -18,6 +18,6 @@ class DataProcess:
         df = self.convert_data()
         new_order = ['open', 'high', 'low', 'close', 'date', 'volume']
         df = df[new_order]
-        time = df.date.iloc[-1]
+        time = df.date.iloc[-1][0:10]
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
                   sep=',', header=True, index=False)
