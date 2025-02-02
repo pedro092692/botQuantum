@@ -21,3 +21,7 @@ class DataProcess:
         time = df.date.iloc[-1][0:10]
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
                   sep=',', header=True, index=False)
+
+    def save_data_frame(self, df):
+        df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}.csv',
+                  sep=',', header=True, index=False)
