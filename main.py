@@ -2,7 +2,7 @@ from get_data import GetData
 from data_df import DataProcess
 from Indicator import Indicator
 
-exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=300)
+exchange = GetData(exchange='binance', symbol='btc', timeframe='15m', candles=300)
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
 indicator = Indicator(df_inf=symbol_data.to_df())
 
