@@ -13,7 +13,7 @@ class GetData:
         exchange_class = getattr(ccxt, exchange_name)
         return exchange_class()
 
-    def price_data(self):
+    def get_ohlcv(self):
         ohlcv = self.exchange_info().fetch_ohlcv(self.symbol, self.timeframe, limit=self.candles)
         return ohlcv
 

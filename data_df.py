@@ -6,7 +6,7 @@ class DataProcess:
         self.symbol_data = symbol_data
         self.info = info
 
-    def convert_data(self) -> pd.DataFrame:
+    def to_df(self) -> pd.DataFrame:
         dataframe = pd.DataFrame(self.symbol_data)
         dataframe.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
         # convert timestamp in datetime object
@@ -14,14 +14,13 @@ class DataProcess:
         dataframe.date = dataframe.date.dt.strftime('%d-%m-%Y %H:%M')
         return dataframe
 
-    def save_data_to_csv(self):
-        df = self.convert_data()
-        new_order = ['open', 'high', 'low', 'close', 'date', 'volume']
-        df = df[new_order]
+    def save_data_to_csv(self, custom_df=pd.DataFrame()):
+        if custom_df.empty:
+            df = self.to_df()
+            new_order = ['open', 'high', 'low', 'close', 'date', 'volume']
+            df = df[new_order]
+        else:
+            df = custom_df
         time = df.date.iloc[-1][0:10]
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
-                  sep=',', header=True, index=False)
-
-    def save_data_frame(self, df):
-        df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}.csv',
                   sep=',', header=True, index=False)

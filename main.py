@@ -1,7 +1,11 @@
 from get_data import GetData
 from data_df import DataProcess
-from strategy import Strategy
+from Indicator import Indicator
 
-btc_info = GetData(exchange='binance', symbol='eth', timeframe='1d', candles=500)
-data = DataProcess(symbol_data=btc_info.price_data(), info=btc_info)
-data.save_data_to_csv()
+exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=300)
+symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
+indicator = Indicator(df_inf=symbol_data.to_df())
+
+doji_pattern = indicator.candle_indicators(pattern='doji')
+
+symbol_data.save_data_to_csv(custom_df=doji_pattern)
