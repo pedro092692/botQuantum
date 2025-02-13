@@ -16,4 +16,8 @@ class Strategy:
                     (self.df['low'].iloc[index - 1] < self.df['lbb'].iloc[index - 1]) and \
                     (self.df['low'].iloc[index] > self.df['lbb'].iloc[index]):
 
-                self.df.loc[index, 'long_signal'] = 'Buy'
+                # check if last 5 candles there was a doji
+                for i in range(1, 5):
+                    if self.df['CDL_DOJI_10_0.1'].iloc[index - i] == 100:
+                        self.df.loc[index, 'long_signal'] = 'Buy'
+                        break

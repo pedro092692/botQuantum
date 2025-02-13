@@ -9,6 +9,7 @@ class Indicator:
 
     def candle_indicators(self, pattern: str):
         self.df_info.ta.cdl_pattern(name=pattern, append=True)
+        print('Add doji pattern to data frame')
         return self.df_info
 
     def bollinger_bands(self, bb_len, n_std, add_to_df=False):

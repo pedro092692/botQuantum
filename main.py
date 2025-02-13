@@ -5,7 +5,7 @@ from strategy import Strategy
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='eth', timeframe='15m', candles=100)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=500)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -14,7 +14,7 @@ symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
 indicator = Indicator(df_inf=symbol_data.to_df())
 
 # add doji patter indicator to de ohlcv data
-# doji_pattern = indicator.candle_indicators(pattern='doji')
+doji_pattern = indicator.candle_indicators(pattern='doji')
 
 # calculate bb_bands
 bb_bands = indicator.bollinger_bands(bb_len=20, n_std=2.0, add_to_df=True)
