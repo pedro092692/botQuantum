@@ -5,6 +5,7 @@ class DojiRsiBbBands:
         self.rsi_over_sold = rsi_over_sold
         self.tp_profit = tp_profit
         self.sp_loss = sp_loss
+        new = 1
 
     def check_long_signal(self, index):
         over_bought_rsi = self.rsi_over_bought
