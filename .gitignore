@@ -3,4 +3,4 @@
 __pycache__
 .DS_Store
 markets_data/*.csv
-strategies/doji_rsi_bb.py
+strategies
