@@ -3,5 +3,5 @@
 __pycache__
 .DS_Store
 markets_data/*.csv
-strategies/ *
+strategies/*.py
 strategies/!simple_strategy.py
