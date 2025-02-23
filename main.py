@@ -2,10 +2,13 @@ from get_data import GetData
 from data_df import DataProcess
 from indicator import Indicator
 from strategy import Strategy
+from strategies.simple_strategy import SimplyStrategy
+from strategies.doji_rsi_bb import DojiRsiBbBands
+from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=500)
+exchange = GetData(exchange='binance', symbol='shib', timeframe='1h', candles=300)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -14,21 +17,26 @@ symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
 indicator = Indicator(df_inf=symbol_data.to_df())
 
 # add doji patter indicator to de ohlcv data
-doji_pattern = indicator.candle_indicators(pattern='doji')
+# doji_pattern = indicator.candle_indicators(pattern='doji')
 
 # calculate bb_bands
-bb_bands = indicator.bollinger_bands(bb_len=20, n_std=2.0, add_to_df=True)
+# bb_bands = indicator.bollinger_bands(bb_len=20, n_std=2.0, add_to_df=True)
 # calculate rsi
 rsi = indicator.rsi(rsi_len=14, add_to_df=True)
 
 # save dataframe with symbol indicators
 symbol_data_with_indicators = indicator.df_info
 
-# set up strategy
-strategy = Strategy(symbol_data=symbol_data_with_indicators)
+# strategy
+rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=70, rsi_over_sold=30)
 
-# start strategy
-strategy.check_long_signal(over_bought_rsi=60, over_sold_rsi=40)
+# set up strategy
+strategy = Strategy(symbol_data=symbol_data_with_indicators, strategy=rsi_strategy)
+
+
+# backtesting
+backtester = Backtester(initial_balance=1000, leverage=1, inv_percent=100, df=symbol_data_with_indicators)
+print(backtester.backtesting(strategy=strategy, symbol=exchange.symbol))
 
 # sava df in csv format
 symbol_data.save_data_to_csv(custom_df=symbol_data_with_indicators)
