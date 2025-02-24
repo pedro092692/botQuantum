@@ -8,7 +8,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='shib', timeframe='1h', candles=300)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -17,10 +17,10 @@ symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
 indicator = Indicator(df_inf=symbol_data.to_df())
 
 # add doji patter indicator to de ohlcv data
-# doji_pattern = indicator.candle_indicators(pattern='doji')
+doji_pattern = indicator.candle_indicators(pattern='doji')
 
 # calculate bb_bands
-# bb_bands = indicator.bollinger_bands(bb_len=20, n_std=2.0, add_to_df=True)
+bb_bands = indicator.bollinger_bands(bb_len=20, n_std=2.0, add_to_df=True)
 # calculate rsi
 rsi = indicator.rsi(rsi_len=14, add_to_df=True)
 
@@ -28,10 +28,11 @@ rsi = indicator.rsi(rsi_len=14, add_to_df=True)
 symbol_data_with_indicators = indicator.df_info
 
 # strategy
-rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=70, rsi_over_sold=30)
+# rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=70, rsi_over_sold=30)
+doji_rsi_bb_bands = DojiRsiBbBands(data_df=symbol_data_with_indicators, rsi_over_bought=60, rsi_over_sold=40)
 
 # set up strategy
-strategy = Strategy(symbol_data=symbol_data_with_indicators, strategy=rsi_strategy)
+strategy = Strategy(symbol_data=symbol_data_with_indicators, strategy=doji_rsi_bb_bands)
 
 
 # backtesting

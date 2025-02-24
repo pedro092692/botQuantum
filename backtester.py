@@ -46,10 +46,11 @@ class Backtester:
             self.open_price = 0
 
     def set_take_profit(self, price, tp_long):
-        self.take_profit_price = price * tp_long
+        self.take_profit_price = price * (1 + (tp_long / 100))
 
     def set_stop_loss(self, price, sl_long):
-        self.stop_loss_price = price * sl_long
+        self.stop_loss_price = price * (1 - (sl_long / 100))
+
 
     def reset_results(self):
         self.balance = self.balance
