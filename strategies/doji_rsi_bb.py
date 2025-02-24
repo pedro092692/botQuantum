@@ -5,7 +5,6 @@ class DojiRsiBbBands:
         self.rsi_over_sold = rsi_over_sold
         self.tp_profit = tp_profit
         self.sp_loss = sp_loss
-        new = 1
 
     def check_long_signal(self, index):
         over_bought_rsi = self.rsi_over_bought
@@ -19,3 +18,9 @@ class DojiRsiBbBands:
             for i in range(1, 5):
                 if self.df['CDL_DOJI_10_0.1'].iloc[index - i] == 100:
                     return True
+
+    def check_short_signal(self, index):
+        over_bought_rsi = self.rsi_over_bought
+        over_sold_rsi = self.rsi_over_sold
+        # check for short signal in data
+        return False

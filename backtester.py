@@ -21,10 +21,18 @@ class Backtester:
 
     def open_position(self, price):
         if not self.is_long:
-            # open position
+            # open long position
             self.is_long = True
             self.total_operations += 1
             self.num_longs += 1
+            self.open_price = price
+            self.amount = self.percent_inv/self.open_price
+
+        if not self.is_short:
+            # open short position
+            self.is_short = True
+            self.total_operations += 1
+            self.num_shorts += 1
             self.open_price = price
             self.amount = self.percent_inv/self.open_price
 
@@ -43,6 +51,21 @@ class Backtester:
                 self.drawdown.append(result)
 
             self.is_long = False
+            self.open_price = 0
+
+        if self.is_short:
+            result = self.amount * (price - self.open_price)
+            self.profit.append(result)
+            self.balance += result
+
+            if result < 0:
+                self.wined_operations += 1
+                self.drawdown.append(0)
+            else:
+                self.lost_operations += 1
+                self.drawdown.append(result)
+
+            self.is_short = False
             self.open_price = 0
 
     def set_take_profit(self, price, tp_long):
@@ -99,6 +122,7 @@ class Backtester:
         close = df['close']
         low = df['low']
         df['long_signal'] = ''
+        df['short_signal'] = ''
         df['profit'] = ''
         df['loss'] = ''
 
@@ -107,6 +131,13 @@ class Backtester:
                 if strategy.check_long_signal(index=i):
                     if not self.is_long:
                         df.loc[i, 'long_signal'] = 'buy'
+                    self.open_position(price=close[i])
+                    self.set_take_profit(price=close[i], tp_long=strategy.tp_profit)
+                    self.set_stop_loss(price=close[i], sl_long=strategy.sp_loss)
+
+                if strategy.check_short_signal(index=i):
+                    if not self.is_short:
+                        df.loc[i, 'short_signal'] = 'sell'
                     self.open_position(price=close[i])
                     self.set_take_profit(price=close[i], tp_long=strategy.tp_profit)
                     self.set_stop_loss(price=close[i], sl_long=strategy.sp_loss)
