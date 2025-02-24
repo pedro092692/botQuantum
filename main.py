@@ -8,7 +8,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='shib', timeframe='1h', candles=300)
+exchange = GetData(exchange='binance', symbol='shib', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -28,7 +28,7 @@ rsi = indicator.rsi(rsi_len=14, add_to_df=True)
 symbol_data_with_indicators = indicator.df_info
 
 # strategy
-rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=70, rsi_over_sold=30)
+rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=77, rsi_over_sold=27)
 
 # set up strategy
 strategy = Strategy(symbol_data=symbol_data_with_indicators, strategy=rsi_strategy)

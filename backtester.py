@@ -19,8 +19,8 @@ class Backtester:
         self.stop_loss_price = 0
         self.df = df
 
-    def open_position(self, price):
-        if not self.is_long:
+    def open_position(self, price, side):
+        if side == 'long':
             # open long position
             self.is_long = True
             self.total_operations += 1
@@ -28,7 +28,7 @@ class Backtester:
             self.open_price = price
             self.amount = self.percent_inv/self.open_price
 
-        if not self.is_short:
+        if side == 'short':
             # open short position
             self.is_short = True
             self.total_operations += 1
@@ -69,10 +69,18 @@ class Backtester:
             self.open_price = 0
 
     def set_take_profit(self, price, tp_long):
-        self.take_profit_price = price * tp_long
+        if self.is_long:
+            self.take_profit_price = price * (1 + (tp_long / 100))
+
+        if self.is_short:
+            self.take_profit_price = price * (1 - (tp_long / 100))
 
     def set_stop_loss(self, price, sl_long):
-        self.stop_loss_price = price * sl_long
+        if self.is_long:
+            self.stop_loss_price = price * (1 - (sl_long/100))
+
+        if self.is_short:
+            self.stop_loss_price = price * (1 + (sl_long/100))
 
     def reset_results(self):
         self.balance = self.balance
@@ -103,6 +111,7 @@ class Backtester:
             'drawdown': drawdown,
             'num_operations': self.total_operations,
             'num_long': self.num_longs,
+            'num_short': self.num_shorts,
             'wined': self.wined_operations,
             'lossed': self.lost_operations,
             'winrate': 0,
@@ -128,17 +137,11 @@ class Backtester:
 
         for i in range(len(df)):
             if self.balance > 0:
-                if strategy.check_long_signal(index=i):
-                    if not self.is_long:
-                        df.loc[i, 'long_signal'] = 'buy'
-                    self.open_position(price=close[i])
-                    self.set_take_profit(price=close[i], tp_long=strategy.tp_profit)
-                    self.set_stop_loss(price=close[i], sl_long=strategy.sp_loss)
-
-                if strategy.check_short_signal(index=i):
-                    if not self.is_short:
-                        df.loc[i, 'short_signal'] = 'sell'
-                    self.open_position(price=close[i])
+                if strategy.check_long_signal(index=i) and not self.is_long:
+                    if self.is_short:
+                        self.close_position(price=self.take_profit_price)
+                    df.loc[i, 'long_signal'] = 'buy'
+                    self.open_position(price=close[i], side='long')
                     self.set_take_profit(price=close[i], tp_long=strategy.tp_profit)
                     self.set_stop_loss(price=close[i], sl_long=strategy.sp_loss)
 
@@ -147,6 +150,21 @@ class Backtester:
                         self.close_position(price=self.take_profit_price)
                         df.loc[i, 'profit'] = 'True'
                     elif low[i] <= self.stop_loss_price:
+                        self.close_position(price=self.stop_loss_price)
+                        df.loc[i, 'loss'] = 'True'
+
+                if strategy.check_short_signal(index=i) and not self.is_short:
+                    if self.is_long:
+                        self.close_position(price=self.take_profit_price)
+                    df.loc[i, 'short_signal'] = 'sell'
+                    self.open_position(price=close[i], side='short')
+                    self.set_take_profit(price=close[i], tp_long=strategy.tp_profit)
+                    self.set_stop_loss(price=close[i], sl_long=strategy.sp_loss)
+
+                if self.is_short:
+                    if low[i] <= self.take_profit_price:
+                        self.close_position(price=self.take_profit_price)
+                    elif high[i] >= self.stop_loss_price:
                         self.close_position(price=self.stop_loss_price)
                         df.loc[i, 'loss'] = 'True'
 
