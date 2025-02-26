@@ -8,7 +8,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='btc', timeframe='1m', candles=1000)
+exchange = GetData(exchange='binance', symbol='xrp', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -41,4 +41,5 @@ print(backtester.backtesting(strategy=strategy, symbol=exchange.symbol))
 
 # sava df in csv format
 symbol_data.save_data_to_csv(custom_df=symbol_data_with_indicators)
+symbol_data.plot_data(df=symbol_data_with_indicators)
 

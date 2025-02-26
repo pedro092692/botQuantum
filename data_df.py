@@ -1,4 +1,5 @@
 import pandas as pd
+import mplfinance as mpf
 
 
 class DataProcess:
@@ -24,3 +25,19 @@ class DataProcess:
         time = df.date.iloc[-1][0:10]
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
                   sep=',', header=True, index=False)
+
+    @staticmethod
+    def plot_data(df: pd.DataFrame):
+        style = mpf.make_mpf_style(marketcolors=mpf.make_marketcolors(up='green', down='red'))
+        dataframe = df
+        dataframe.date = pd.to_datetime(df.date, dayfirst=True)
+        dataframe = dataframe.set_index('date')
+        long_markers = df['close'].where(df['long_signal'] == 'buy', None)
+        sell_markets = df['close'].where(df['profit'] == 'True', None)
+        mpf.plot(dataframe, type='candle', style=style, figsize=(100, 60), savefig='operations.png',
+        warn_too_much_data=1001,
+        addplot=[mpf.make_addplot(long_markers, type='scatter', markersize=150, marker='^', color='orange'),
+                 mpf.make_addplot(sell_markets, type='scatter', markersize=150, marker='^', color='green'),
+                ]
+        )
+
