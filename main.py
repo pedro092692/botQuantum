@@ -8,7 +8,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='doge', timeframe='5m', candles=1000)
+exchange = GetData(exchange='binance', symbol='btc', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
