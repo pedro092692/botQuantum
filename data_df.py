@@ -26,18 +26,22 @@ class DataProcess:
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
                   sep=',', header=True, index=False)
 
-    @staticmethod
-    def plot_data(df: pd.DataFrame):
+
+    def plot_data(self, df: pd.DataFrame):
         style = mpf.make_mpf_style(marketcolors=mpf.make_marketcolors(up='green', down='red'))
         dataframe = df
         dataframe.date = pd.to_datetime(df.date, dayfirst=True)
         dataframe = dataframe.set_index('date')
         long_markers = df['close'].where(df['long_signal'] == 'buy', None)
         sell_markets = df['close'].where(df['profit'] == 'True', None)
-        mpf.plot(dataframe, type='candle', style=style, figsize=(100, 60), savefig='operations.png',
+        loss_operation = df['close'].where(df['loss'] == 'True', None)
+        markers = [long_markers, sell_markets, loss_operation]
+        active_markers = [mpf.make_addplot(maker, type='scatter', markersize=150, marker='^', color=color)
+                          for maker, color in zip(markers, ['blue', 'green', 'red']) if not maker.dropna().empty]
+
+        mpf.plot(dataframe, type='candle', style=style, figsize=(100, 60),
+                 savefig=f'markets_data/operations-{self.info.symbol.replace('/', '-')}.png',
         warn_too_much_data=1001,
-        addplot=[mpf.make_addplot(long_markers, type='scatter', markersize=150, marker='^', color='orange'),
-                 mpf.make_addplot(sell_markets, type='scatter', markersize=150, marker='^', color='green'),
-                ]
+        addplot=active_markers
         )
 
