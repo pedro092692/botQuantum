@@ -3,4 +3,5 @@
 __pycache__
 .DS_Store
 markets_data/*.csv
+markets_data/*.png
 strategies

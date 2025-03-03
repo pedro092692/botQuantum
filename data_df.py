@@ -26,7 +26,6 @@ class DataProcess:
         df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
                   sep=',', header=True, index=False)
 
-
     def plot_data(self, df: pd.DataFrame):
         style = mpf.make_mpf_style(marketcolors=mpf.make_marketcolors(up='green', down='red'))
         dataframe = df
