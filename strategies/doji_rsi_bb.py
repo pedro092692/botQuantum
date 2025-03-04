@@ -1,11 +1,12 @@
 class DojiRsiBbBands:
-    def __init__(self, data_df, rsi_over_bought, rsi_over_sold, tp_profit_percent=0.7, sp_loss_percent=10):
+    def __init__(self, data_df, rsi_over_bought, rsi_over_sold, tp_profit_percent=0.7, sp_loss_percent=10,
+                 tsl_pct=5):
         self.df = data_df
         self.rsi_over_bought = rsi_over_bought
         self.rsi_over_sold = rsi_over_sold
         self.tp_profit = tp_profit_percent
         self.sp_loss = sp_loss_percent
-        new = 1
+        self.tsl_pct = tsl_pct
 
     def check_long_signal(self, index):
         over_bought_rsi = self.rsi_over_bought
