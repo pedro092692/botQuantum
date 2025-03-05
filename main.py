@@ -8,7 +8,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='xlm', timeframe='1m', candles=1000)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
@@ -30,7 +30,7 @@ symbol_data_with_indicators = indicator.df_info
 # strategy
 # rsi_strategy = SimplyStrategy(data_df=symbol_data_with_indicators, rsi_over_bought=70, rsi_over_sold=30)
 doji_rsi_bb_bands = DojiRsiBbBands(data_df=symbol_data_with_indicators, rsi_over_bought=60, rsi_over_sold=40,
-                                   sp_loss_percent=10, tsl_pct=3)
+                                   tp_profit_percent=0.7, sp_loss_percent=10, tsl_pct=3)
 
 # set up strategy
 strategy = Strategy(symbol_data=symbol_data_with_indicators, strategy=doji_rsi_bb_bands)
