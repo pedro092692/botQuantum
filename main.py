@@ -8,10 +8,13 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='eth', timeframe='1m', candles=1000)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=1000)
 
 # Get ohlcv data from exchange
 symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
+print(exchange.get_ohlcv())
+
+exit(0)
 
 # add ohlcv df to indicators class
 indicator = Indicator(df_inf=symbol_data.to_df())
