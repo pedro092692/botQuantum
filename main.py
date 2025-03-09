@@ -8,13 +8,12 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='eth', timeframe='5m', candles=1000)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
-symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
-print(exchange.get_ohlcv())
+symbol_data = DataProcess(symbol_data=exchange.get_ohlcv_historical(date_start='27/02/2025',
+                                                                    date_end='10/03/2025'), info=exchange)
 
-exit(0)
 
 # add ohlcv df to indicators class
 indicator = Indicator(df_inf=symbol_data.to_df())
@@ -46,5 +45,5 @@ print(backtester.backtesting(strategy=strategy, symbol=exchange.symbol))
 
 # sava df in csv format
 symbol_data.save_data_to_csv(custom_df=symbol_data_with_indicators)
-symbol_data.plot_data(df=symbol_data_with_indicators)
+# symbol_data.plot_data(df=symbol_data_with_indicators)
 
