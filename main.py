@@ -1,6 +1,5 @@
 from get_data import GetData
 from data_df import DataProcess
-from indicator import Indicator
 from strategy import Strategy
 from strategies.simple_strategy import SimplyStrategy
 from strategies.doji_rsi_bb import DojiRsiBbBands
@@ -8,7 +7,7 @@ from backtester import Backtester
 
 
 # Get exchange
-exchange = GetData(exchange='binance', symbol='btc', timeframe='1m', candles=1000)
+exchange = GetData(exchange='binance', symbol='eth', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
 # symbol_data = DataProcess(symbol_data=exchange.get_ohlcv_historical(date_start='09/03/2025', date_end='15/03/2025'),
