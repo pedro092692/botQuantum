@@ -9,7 +9,7 @@ class Indicator:
 
     def candle_indicators(self, pattern: str):
         self.df_info.ta.cdl_pattern(name=pattern, append=True)
-        print('Add doji pattern to data frame')
+        # print('Add doji pattern to data frame')
         return self.df_info
 
     def bollinger_bands(self, bb_len, n_std, add_to_df=False):
@@ -24,7 +24,7 @@ class Indicator:
             self.df_info['mbb'] = bb.iloc[:, 1]
             self.df_info['ubb'] = bb.iloc[:, 2]
 
-            print('Bollinger Bands Added to symbol data frame')
+            # print('Bollinger Bands Added to symbol data frame')
         else:
             return bb
 
@@ -37,7 +37,7 @@ class Indicator:
         if add_to_df:
             # add actual indicator to current symbol data
             self.df_info['rsi'] = rsi
-            print('RSI Added to symbol data frame')
+            # print('RSI Added to symbol data frame')
         else:
             return rsi
 

@@ -20,9 +20,8 @@ class Population:
     def selection(self):
         return sorted(
             self.population,
-            key=lambda individual: individual.backtester.results(
-                symbol='-',
-            )['fitness_function']
+            key=lambda individual: individual.backtester.results(symbol='-')['fitness_function'],
+            reverse=True
         )[0:self.n_best]
 
     def crossover(self):
