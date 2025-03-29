@@ -10,9 +10,9 @@ from backtester import Backtester
 exchange = GetData(exchange='binance', symbol='btc', timeframe='1m', candles=1000)
 
 # Get ohlcv data from exchange
-symbol_data = DataProcess(symbol_data=exchange.get_ohlcv_historical(date_start='01/03/2025', date_end='29/03/2025'),
-                          info=exchange)
-# symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
+# symbol_data = DataProcess(symbol_data=exchange.get_ohlcv_historical(date_start='01/03/2025', date_end='29/03/2025'),
+#                           info=exchange)
+symbol_data = DataProcess(symbol_data=exchange.get_ohlcv(), info=exchange)
 
 
 # strategy
