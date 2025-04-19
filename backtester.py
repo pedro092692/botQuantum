@@ -3,7 +3,7 @@ def calc_trailing_stop_loss(df, i, price, sl_long):
 
 
 class Backtester:
-    def __init__(self, initial_balance, leverage, inv_percent,  df, tsl=False):
+    def __init__(self, initial_balance, leverage, inv_percent, tsl=False):
         self.balance = initial_balance
         self.leverage = leverage
         self.amount = 0
@@ -22,7 +22,6 @@ class Backtester:
         self.take_profit_price = 0
         self.stop_loss_price = 0
         self.trailing_stop_loss = tsl
-        self.df = df
 
     def open_position(self, price):
         # open position
@@ -68,7 +67,7 @@ class Backtester:
         self.is_short = False
         self.open_price = 0
 
-    def results(self, symbol):
+    def results(self, symbol, df):
         profit = sum(self.profit)
         drawdown = sum(self.drawdown)
 
@@ -76,8 +75,8 @@ class Backtester:
 
         results = {
             'symbol': symbol,
-            'start_date': self.df['date'][0],
-            'end_date': self.df['date'].iloc[-1],
+            'start_date': df['date'][0],
+            'end_date': df['date'].iloc[-1],
             'balance': self.balance,
             'profit': profit - fess,
             'drawdown': drawdown,
@@ -96,8 +95,7 @@ class Backtester:
 
         return results
 
-    def backtesting(self, strategy, symbol):
-        df = self.df
+    def backtesting(self, strategy, symbol, df):
         high = df['high']
         close = df['close']
         low = df['low']
@@ -141,5 +139,5 @@ class Backtester:
                             self.close_position(price=self.stop_loss_price)
                             df.loc[i, 'loss'] = 'True'
 
-        return self.results(symbol)
+        return self.results(symbol, df)
 

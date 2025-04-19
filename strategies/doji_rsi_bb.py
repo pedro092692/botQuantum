@@ -2,18 +2,19 @@ from indicator import Indicator
 
 class DojiRsiBbBands:
     def __init__(self, data_df, rsi_over_bought, rsi_over_sold, tp_profit_percent=0.7, sp_loss_percent=10,
-                 tsl_pct=5, bb_len=20, n_std=2.0, rsi_len=14):
+                 tsl_pct=5, bb_len=20, n_std=2.0, rsi_len=14, log_indicators=True):
         self.df = data_df
         self.rsi_over_bought = rsi_over_bought
         self.rsi_over_sold = rsi_over_sold
         self.tp_profit = tp_profit_percent
         self.sp_loss = sp_loss_percent
         self.tsl_pct = tsl_pct
-        self.indicators = Indicator(df_inf=self.df)
+        self.indicators = Indicator(df_inf=self.df, log=log_indicators)
         self.bb_len = bb_len
         self.n_std = n_std
         self.rsi_len = rsi_len
         self.add_indicators()
+        self.log_indicators = log_indicators
 
     def add_indicators(self):
         # calc indicators
@@ -32,8 +33,9 @@ class DojiRsiBbBands:
         if (over_bought_rsi > self.df['rsi'].iloc[index] > over_sold_rsi) and \
                 (self.df['low'].iloc[index - 1] < self.df['lbb'].iloc[index - 1]) and \
                 (self.df['low'].iloc[index] > self.df['lbb'].iloc[index]):
-            return True
+
+            # return True
             # check if last 5 candles there was a doji
-            # for i in range(1, 5):
-            #     if self.df['CDL_DOJI_10_0.1'].iloc[index - i] == 100:
-            #         return True
+            for i in range(1, 5):
+                if self.df['CDL_DOJI_10_0.1'].iloc[index - i] == 100:
+                    return True

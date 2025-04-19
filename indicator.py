@@ -4,9 +4,8 @@ import pandas_ta as ta
 
 class Indicator:
 
-    def __init__(self, df_inf, strategy, log=True):
+    def __init__(self, df_inf, log=True):
         self.df_info = df_inf
-        self.strategy = strategy
         self.log = log
 
     def candle_indicators(self, pattern: str):
@@ -45,4 +44,18 @@ class Indicator:
         else:
             return rsi
 
+    def super_trend(self, length=10, factor=3, add_to_df=False):
+        super_trend = ta.supertrend(
+            high=self.df_info['high'],
+            low=self.df_info['low'],
+            close=self.df_info['close'],
+            length=length,
+            multiplier=factor
+        )
+        if add_to_df:
+            self.df_info['upper_band'] = super_trend[:, 0]
+            self.df_info['lower_band'] = super_trend[:, 1]
+
+        if self.log:
+            print('Super_trend Added to symbol data frame')
 
