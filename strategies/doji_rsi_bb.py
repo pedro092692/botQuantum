@@ -26,6 +26,7 @@ class DojiRsiBbBands:
         # update dataframe
         self.df = self.indicators.df_info
 
+
     def check_long_signal(self, index):
         over_bought_rsi = self.rsi_over_bought
         over_sold_rsi = self.rsi_over_sold

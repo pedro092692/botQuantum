@@ -53,8 +53,8 @@ class Indicator:
             multiplier=factor
         )
         if add_to_df:
-            self.df_info['upper_band'] = super_trend[:, 0]
-            self.df_info['lower_band'] = super_trend[:, 1]
+            self.df_info['upper_band'] = super_trend.iloc[:, 2]
+            self.df_info['lower_band'] = super_trend.iloc[:, 3]
 
         if self.log:
             print('Super_trend Added to symbol data frame')
