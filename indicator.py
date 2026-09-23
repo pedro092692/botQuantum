@@ -4,7 +4,7 @@ import pandas_ta as ta
 
 class Indicator:
 
-    def __init__(self, df_inf, strategy, log=True):
+    def __init__(self, df_inf, strategy=None, log=True):
         self.df_info = df_inf
         self.strategy = strategy
         self.log = log
@@ -12,7 +12,7 @@ class Indicator:
     def candle_indicators(self, pattern: str):
         self.df_info.ta.cdl_pattern(name=pattern, append=True)
         if self.log:
-            print('Add doji pattern to data frame')
+            print(f'Add {pattern} pattern to data frame')
         return self.df_info
 
     def bollinger_bands(self, bb_len, n_std, add_to_df=False):

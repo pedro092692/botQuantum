@@ -1,19 +1,21 @@
 from indicator import Indicator
 
+
 class DojiRsiBbBands:
     def __init__(self, data_df, rsi_over_bought, rsi_over_sold, tp_profit_percent=0.7, sp_loss_percent=10,
-                 tsl_pct=5, bb_len=20, n_std=2.0, rsi_len=14):
+                 tsl_pct=5, bb_len=20, n_std=2.0, rsi_len=14, log=True):
         self.df = data_df
         self.rsi_over_bought = rsi_over_bought
         self.rsi_over_sold = rsi_over_sold
         self.tp_profit = tp_profit_percent
         self.sp_loss = sp_loss_percent
         self.tsl_pct = tsl_pct
-        self.indicators = Indicator(df_inf=self.df)
+        self.indicators = Indicator(df_inf=self.df, log=log)
         self.bb_len = bb_len
         self.n_std = n_std
         self.rsi_len = rsi_len
         self.add_indicators()
+        self.signals = self.calc_long_signals()
 
     def add_indicators(self):
         # calc indicators
@@ -25,15 +27,16 @@ class DojiRsiBbBands:
         # update dataframe
         self.df = self.indicators.df_info
 
+    def calc_long_signals(self):
+        # only shift(1) (previous candle) is allowed here, never shift(-1): that would read the future.
+        # NaN comparisons (indicator warm-up and first candle) are False, so no signal there
+        df = self.df
+        rsi_ok = (df['rsi'] < self.rsi_over_bought) & (df['rsi'] > self.rsi_over_sold)
+        prev_low_below_bb = df['low'].shift(1) < df['lbb'].shift(1)
+        low_back_inside_bb = df['low'] > df['lbb']
+        # check if last 5 candles there was a doji
+        # doji_recent = (df['CDL_DOJI_10_0.1'].shift(1).rolling(4).max() == 100)
+        return (rsi_ok & prev_low_below_bb & low_back_inside_bb).to_numpy()
+
     def check_long_signal(self, index):
-        over_bought_rsi = self.rsi_over_bought
-        over_sold_rsi = self.rsi_over_sold
-        # check for long signal in data
-        if (over_bought_rsi > self.df['rsi'].iloc[index] > over_sold_rsi) and \
-                (self.df['low'].iloc[index - 1] < self.df['lbb'].iloc[index - 1]) and \
-                (self.df['low'].iloc[index] > self.df['lbb'].iloc[index]):
-            return True
-            # check if last 5 candles there was a doji
-            # for i in range(1, 5):
-            #     if self.df['CDL_DOJI_10_0.1'].iloc[index - i] == 100:
-            #         return True
+        return bool(self.signals[index])
