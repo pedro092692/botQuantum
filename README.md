@@ -37,85 +37,83 @@ SECRET=tu_api_secret
 | `get_data.py` | Descarga velas de Binance (últimas N con ccxt o un rango de fechas con python-binance). Descarta la vela que todavía no cerró. |
 | `data_df.py` | Convierte las velas a DataFrame, guarda/carga CSV, separa train/test y dibuja las operaciones. |
 | `indicator.py` | Indicadores con `pandas_ta`: RSI, Bandas de Bollinger, patrones de velas (doji). |
-| `strategies/` | Estrategias. Cada una calcula sus indicadores y responde `check_long_signal(index)`. |
+| `strategies/` | Estrategias. Cada una calcula sus indicadores y responde `check_long_signal(index)`. `strategies/__init__.py` tiene el registro `STRATEGIES` que usa el menú. |
 | `strategy.py` | Envoltorio que le pasa la estrategia al backtester. |
 | `backtester.py` | Simula las operaciones: TP, SL, trailing stop, comisiones, slippage, drawdown. |
 | `genetic_algorithm.py` | Algoritmo genético para buscar los mejores parámetros de una estrategia. |
-| `main.py` | Backtest de una estrategia con parámetros fijos. |
-| `trybackGA.py` | Optimiza parámetros con el algoritmo genético (train) y valida en datos nuevos (test). |
-| `tests/` | Tests que comprueban que no hay look-ahead bias. |
-| `markets_data/` | CSV de velas y gráficos generados (ignorados por git). |
+| `trybackGA.py` | `optimize()`: optimiza con el algoritmo genético (train) y valida en datos nuevos (test). |
+| `cli.py` | Menú interactivo. |
+| `main.py` | Abre el menú. |
+| `tests/` | Tests de look-ahead bias y del menú. |
+| `markets_data/` | CSV de velas, operaciones y gráficos generados (ignorados por git). |
 
-## 3. Flujo de trabajo recomendado
-
-### Paso 1: descargar datos una vez y guardarlos
-
-En `main.py`, al principio del archivo:
-
-```python
-SYMBOL = 'btc'
-TIMEFRAME = '15m'
-DATA_SOURCE = 'historical'
-DATE_START = '01/01/2025'   # dd/mm/aaaa, UTC
-DATE_END = '01/04/2025'
-SAVE_CSV = True
-```
+## 3. Uso: el menú
 
 ```bash
 python main.py
 ```
 
-Se crea `markets_data/BTC-USDT-15m-01-04-2025.csv` (símbolo, timeframe y fecha de la última vela).
+```
+ botQuantum
+Que quieres hacer?
+  1. Descargar datos de Binance
+  2. Backtest de una estrategia
+  3. Optimizar parametros (algoritmo genetico)
+  4. Correr tests
+  5. Salir
+```
+
+En cada pregunta, el valor entre `[corchetes]` es el valor por defecto: **Enter lo acepta**.
+`Ctrl+C` cancela la acción en curso y te devuelve al menú.
+
+### 1. Descargar datos de Binance
+
+Pide moneda (se compara contra USDT), timeframe y rango de fechas (`dd/mm/aaaa`, en UTC). Guarda
+las velas en `markets_data/`, por ejemplo `ETH-USDT-1h-01-01-2025_01-06-2025.csv`.
+Descarga una vez y reutiliza el CSV todas las veces que quieras.
+
 Usa **varios meses** de datos, que incluyan mercado alcista, bajista y lateral. Unas cuantas horas
 de velas no dicen nada.
 
-### Paso 2: probar una estrategia sin volver a descargar
+### 2. Backtest de una estrategia
 
-```python
-DATA_SOURCE = 'csv'
-CSV_PATH = 'markets_data/BTC-USDT-15m-01-04-2025.csv'
-PLOT = True   # guarda markets_data/operations-BTC-USDT.png
-```
+1. Elige un CSV de `markets_data/` y una estrategia.
+2. Ajusta los parámetros de la estrategia (Enter = valor por defecto).
+3. Ajusta el backtester:
+   - **Trailing stop** (`s`) o **stop loss fijo** (`n`).
+   - **Comisión por lado** en %: spot taker = 0.1, spot con BNB = 0.075, futuros maker = 0.02.
+   - **Slippage** %: empeora un poco cada precio de entrada y de salida.
+4. Muestra los resultados y avisa si hubo pocas operaciones o si no le ganó a comprar y mantener.
+5. Opcional: guarda las operaciones en `markets_data/operations-<datos>.csv` y el gráfico en
+   `markets_data/operations-<datos>.png`.
 
-Los parámetros de la estrategia y del backtester se cambian en el mismo `main.py`:
+### 3. Optimizar parámetros
 
-```python
-plan = DojiRsiBbBands(data_df=df, rsi_over_bought=60, rsi_over_sold=40,
-                      tp_profit_percent=0.7, sp_loss_percent=0.3, tsl_pct=3)
+Pide el CSV, el número de generaciones, los individuos por generación y el % de datos de train.
+Por ahora optimiza la estrategia **RSI + Bandas de Bollinger**; los genes están en
+`GENE_RANGES` de `trybackGA.py` (TP, SL y trailing son fijos, en `FIXED_PARAMS`).
 
-backtester = Backtester(initial_balance=1000, leverage=1, inv_percent=100, df=plan.df,
-                        tsl=True, fee_pct=0.1, slippage_pct=0.02)
-```
-
-- `tsl=True` usa el trailing stop (`tsl_pct`); `tsl=False` usa un stop fijo (`sp_loss_percent`).
-- `fee_pct` es la comisión **por lado** en %: spot taker = 0.1, spot con BNB = 0.075, futuros maker = 0.02.
-- `slippage_pct` empeora un poco cada precio de entrada y de salida.
-
-### Paso 3: optimizar con el algoritmo genético
-
-En `trybackGA.py` configura `DATA_SOURCE`, `CSV_PATH`, `TRAIN_PCT`, `GENERATIONS` y `GENE_RANGES`.
-
-```bash
-python trybackGA.py
-```
-
-- El genético **solo ve el 70% inicial** de los datos (train).
-- Al final se prueba el mejor individuo **una sola vez** con el 30% final (test), que nunca vio.
-- Si el resultado de test es mucho peor que el de train, los parámetros están sobreajustados
-  (memorizaron el pasado).
+- El genético **solo ve el primer X%** de los datos (train).
+- Al final prueba el mejor individuo **una sola vez** con el resto (test), que nunca vio.
+- Si test es mucho peor que train, los parámetros están sobreajustados (memorizaron el pasado).
 - No repitas el ciclo "optimizo → miro test → cambio algo → vuelvo a mirar test" muchas veces:
   así el test también termina sobreajustado. Guarda un periodo final que no toques hasta el final.
 
-Genes actuales: `rsi_over_bought`, `rsi_over_sold`, `bb_len`, `n_std` (x10, o sea 10 → 1.0),
-`rsi_len`.
+Con 30 generaciones de 50 individuos y 3 meses de velas de 15m tarda unos 2 minutos.
 
-### Paso 4: correr los tests
+### 4. Correr tests
+
+Equivale a:
 
 ```bash
 python -m unittest -v
 ```
 
 Corre siempre los tests después de tocar el backtester o una estrategia.
+
+### Sin menú
+
+`python trybackGA.py` corre el optimizador con la configuración que está al principio del archivo.
 
 ## 4. Cómo leer los resultados
 
@@ -148,7 +146,9 @@ Con menos de ~30 operaciones el resultado es casi pura suerte.
   eso lee el futuro.
 - Calcula las señales vectorizadas en `__init__` (mira `strategies/doji_rsi_bb.py`) y devuelve
   `bool` en `check_long_signal(index)`.
-- La estrategia necesita los atributos `tp_profit`, `sp_loss` y `tsl_pct`.
+- La estrategia necesita los atributos `tp_profit`, `sp_loss` y `tsl_pct`, y aceptar `log=False`.
+- Regístrala en `STRATEGIES` (`strategies/__init__.py`) con sus parámetros y valores por defecto
+  para que aparezca en el menú.
 - Agrega la estrategia a `StrategyLookAheadTest` en `tests/test_lookahead.py`: comprueba que las
   señales no cambian cuando se borran las velas futuras.
 

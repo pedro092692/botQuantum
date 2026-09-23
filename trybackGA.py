@@ -5,7 +5,7 @@ from strategies.doji_rsi_bb import DojiRsiBbBands
 from strategy import Strategy
 from backtester import Backtester
 
-# ---------------- config ----------------
+# ---------------- config (only when running this file directly, the CLI asks for it) ----------------
 SYMBOL = 'btc'
 TIMEFRAME = '15m'
 # 'historical': DATE_START -> DATE_END | 'csv': file in CSV_PATH
@@ -16,23 +16,59 @@ CSV_PATH = 'markets_data/BTC-USDT-15m-01-04-2025.csv'
 TRAIN_PCT = 70
 GENERATIONS = 30
 GENERATION_SIZE = 50
-# -----------------------------------------
+# ----------------------------------------------------------------------------------------------------
 
 # genes: rsi_over_bought, rsi_over_sold, bb_len, n_std (x10), rsi_len
 GENE_RANGES = [(50, 100), (0, 50), (10, 60), (10, 31), (5, 40)]
+# fixed parameters (not optimized yet)
+FIXED_PARAMS = dict(tp_profit_percent=0.7, sp_loss_percent=0.3, tsl_pct=3)
 
 
 def decode(genes):
-    return dict(rsi_over_bought=genes[0], rsi_over_sold=genes[1], bb_len=genes[2],
-                n_std=genes[3] / 10, rsi_len=genes[4])
+    return dict(rsi_over_bought=int(genes[0]), rsi_over_sold=int(genes[1]), bb_len=int(genes[2]),
+                n_std=genes[3] / 10, rsi_len=int(genes[4]))
 
 
-def run(df, genes):
-    plan = DojiRsiBbBands(data_df=df.copy(), tp_profit_percent=0.7, sp_loss_percent=0.3, tsl_pct=3,
-                          log=False, **decode(genes))
+def run(df, genes, symbol='-'):
+    plan = DojiRsiBbBands(data_df=df.copy(), log=False, **FIXED_PARAMS, **decode(genes))
     backtester = Backtester(initial_balance=1000, leverage=1, inv_percent=100, df=plan.df,
                             tsl=True, fee_pct=0.1, slippage_pct=0.02)
-    return backtester.backtesting(strategy=Strategy(strategy=plan), symbol=SYMBOL)
+    return backtester.backtesting(strategy=Strategy(strategy=plan), symbol=symbol)
+
+
+def optimize(df, generations=GENERATIONS, generation_size=GENERATION_SIZE, train_pct=TRAIN_PCT,
+             on_generation=None):
+    """
+    Optimize the genes with the train data (first train_pct %) and validate the best individual
+    once with the test data (the rest). on_generation(number, best_individual) is called every generation.
+    """
+    # the GA only sees the train data, the test data is used once at the end
+    train_df, test_df = train_test_split(df, train_pct=train_pct)
+
+    P = Population(
+        generation_size=generation_size,
+        n_genes=len(GENE_RANGES),
+        gene_ranges=GENE_RANGES,
+        n_best=min(10, generation_size),
+        mutation_rate=0.2,
+        n_elite=2
+    )
+
+    for x in range(generations):
+        P.evaluate(lambda genes: run(train_df, genes))
+        if on_generation:
+            on_generation(x, P.best())
+        if x < generations - 1:
+            P.crossover()
+            P.mutation()
+
+    best = P.best()
+    return {
+        'params': {**decode(best.genes), **FIXED_PARAMS},
+        'train': best.results,
+        # if the test is much worse than the train, the parameters are overfitted
+        'test': run(test_df, best.genes),
+    }
 
 
 if __name__ == '__main__':
@@ -43,31 +79,11 @@ if __name__ == '__main__':
     else:
         df = load_csv(CSV_PATH)
 
-    # the GA only sees the train data, the test data is used once at the end
-    train_df, test_df = train_test_split(df, train_pct=TRAIN_PCT)
-    print(f'train: {train_df.date.iloc[0]} -> {train_df.date.iloc[-1]} ({len(train_df)} candles)')
-    print(f'test:  {test_df.date.iloc[0]} -> {test_df.date.iloc[-1]} ({len(test_df)} candles)')
-
-    P = Population(
-        generation_size=GENERATION_SIZE,
-        n_genes=len(GENE_RANGES),
-        gene_ranges=GENE_RANGES,
-        n_best=10,
-        mutation_rate=0.2,
-        n_elite=2
-    )
-
-    for x in range(GENERATIONS):
-        P.evaluate(lambda genes: run(train_df, genes))
-        best = P.best()
+    def log_generation(x, best):
         print(f'GENERATION {x}: best fitness={best.fitness:.2f} profit={best.results["profit"]:.2f} '
               f'trades={best.results["num_operations"]} genes={decode(best.genes)}')
-        if x < GENERATIONS - 1:
-            P.crossover()
-            P.mutation()
 
-    best = P.best()
-    print('\nBEST INDIVIDUAL', decode(best.genes))
-    print('TRAIN (in-sample):', best.results)
-    # if the test is much worse than the train, the parameters are overfitted
-    print('TEST (out-of-sample):', run(test_df, best.genes))
+    result = optimize(df, on_generation=log_generation)
+    print('\nBEST INDIVIDUAL', result['params'])
+    print('TRAIN (in-sample):', result['train'])
+    print('TEST (out-of-sample):', result['test'])

@@ -39,9 +39,11 @@ class DataProcess:
             df = self.to_df()
         else:
             df = custom_df
-        time = df.date.iloc[-1][0:10]
-        df.to_csv(f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{time}.csv',
-                  sep=',', header=True, index=False)
+        start = df.date.iloc[0][0:10]
+        end = df.date.iloc[-1][0:10]
+        path = f'markets_data/{self.info.symbol.replace('/', '-')}-{self.info.timeframe}-{start}_{end}.csv'
+        df.to_csv(path, sep=',', header=True, index=False)
+        return path
 
     def plot_data(self, df: pd.DataFrame):
         style = mpf.make_mpf_style(marketcolors=mpf.make_marketcolors(up='green', down='red'))
